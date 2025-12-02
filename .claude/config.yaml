@@ -1,0 +1,66 @@
+# Claude Code Configuration for Ani-Radar Project
+
+project_name: ani-radar
+description: Bahamut Anime Rating Dashboard - Multi-platform anime rating aggregator
+
+# Project structure
+directories:
+  source: app
+  data: data
+  scripts: crawler
+
+# Development workflow
+workflow:
+  phases:
+    - name: data_collection
+      description: Scrape and collect anime data from Bahamut and cross-platform sources
+      status: pending
+    - name: frontend_development
+      description: Build Next.js dashboard with filtering and sorting
+      status: pending
+    - name: deployment
+      description: Deploy to production and setup automation
+      status: pending
+
+# Technology stack
+tech_stack:
+  frontend:
+    - Next.js (App Router)
+    - TypeScript
+    - Tailwind CSS
+    - shadcn/ui
+  backend:
+    - Python 3.8+
+    - BeautifulSoup4
+    - Requests
+  deployment:
+    - Vercel / Netlify / GitHub Pages
+
+# Key files
+key_files:
+  - prd.md
+  - ROADMAP.md
+  - README.md
+  - app/types/anime.ts
+  - app/lib/filters.ts
+  - app/lib/sorting.ts
+  - crawler/bahamut_scraper.py
+  - crawler/cross_platform.py
+  - data/animes.json
+
+# Development guidelines
+guidelines:
+  - Follow PRD specifications strictly
+  - Implement phases sequentially as outlined in ROADMAP.md
+  - Test each component before moving to next phase
+  - Rate limiting: 2-3s for Bahamut, 1.5s for MAL, 5s for Douban
+  - Accept 70% cross-platform coverage as success criteria
+  - Keep UI simple and intuitive (no instructions needed)
+
+# Important notes
+notes:
+  - Search query clears all other filters (PRD requirement)
+  - Genre filter uses OR logic (not AND)
+  - Missing ratings displayed last in sort order
+  - Bahamut ratings are 1-5 scale (normalize to 0-10 for composite)
+  - Total composite weights must equal 100%
