@@ -1,5 +1,7 @@
 # Ani-Radar - Bahamut Anime Rating Dashboard
 
+**Current Status (Phase 1.5)**: Data collection infrastructure is built. We are currently implementing a two-step scraping process: fetching the main anime page, then navigating to the detailed "Work Info" (ACG Database) page to correctly capture Japanese titles, which are critical for cross-platform matching.
+
 A comprehensive anime rating dashboard that aggregates ratings from Bahamut Anime Crazy (巴哈姆特動畫瘋), IMDb, Douban, and MyAnimeList to help you discover the best anime to watch.
 
 ## Overview
