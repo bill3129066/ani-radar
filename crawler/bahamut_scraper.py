@@ -110,15 +110,10 @@ def scrape_anime_detail(url: str) -> Optional[Dict]:
         # Details from the right-side info box
         data_file = soup.select_one('.data-file')
         if data_file:
-            # Original Title is not in a standard place, try to find it in the info box
             for li in data_file.select('.type-list li.type'):
                 title_span = li.find('span', class_='title')
                 if title_span:
-                    if '原文名稱' in title_span.text:
-                        content_p = li.find('p', class_='content')
-                        if content_p:
-                            anime['titleOriginal'] = content_p.text.strip()
-                    elif '首播日期' in title_span.text:
+                    if '首播日期' in title_span.text:
                         content_p = li.find('p', class_='content')
                         if content_p:
                              year_match = re.search(r'(\d{4})', content_p.text)
@@ -145,6 +140,49 @@ def scrape_anime_detail(url: str) -> Optional[Dict]:
             votes_match = re.search(r'(\d+)', votes_elem.text.replace(',', ''))
             if votes_match:
                 anime['ratings']['bahamut']['votes'] = int(votes_match.group(1))
+
+        # --- Phase 1.5: Secondary Scrape for Japanese Title (ACG Database) ---
+        # Find "作品資料" link
+        acg_link = None
+        for a in soup.find_all('a'):
+            if a.text and "作品資料" in a.text:
+                acg_link = a.get('href')
+                break
+        
+        if not acg_link:
+             # Fallback: search by href pattern
+             for a in soup.find_all('a', href=True):
+                if 'acg.gamer.com.tw/acgDetail.php' in a['href']:
+                    acg_link = a['href']
+                    break
+
+        if acg_link:
+            # Handle relative/protocol-less URLs
+            if acg_link.startswith('//'):
+                acg_link = 'https:' + acg_link
+            elif acg_link.startswith('/'):
+                acg_link = BASE_URL + acg_link # Unlikely but safe
+            elif not acg_link.startswith('http'):
+                 # Could be relative, but usually starts with //
+                 pass
+
+            # Rate limit before secondary request
+            rate_limit()
+            
+            try:
+                # Fetch ACG page
+                # print(f"   ... Fetching ACG info: {acg_link}") 
+                acg_response = requests.get(acg_link, headers=get_random_headers(), timeout=30)
+                acg_response.raise_for_status()
+                acg_soup = BeautifulSoup(acg_response.text, 'lxml')
+                
+                # Extract Japanese Title (First h2)
+                # Structure: h1(Chinese) -> h2(Japanese) -> h2(English)
+                first_h2 = acg_soup.find('h2')
+                if first_h2:
+                    anime['titleOriginal'] = first_h2.get_text(strip=True)
+            except Exception as e:
+                print(f"   ⚠️ Failed to fetch ACG page {acg_link}: {e}")
 
         return anime
 
