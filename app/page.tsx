@@ -8,6 +8,7 @@ import { FilterBar } from '@/app/components/filter-bar';
 import { AnimeGrid } from '@/app/components/anime-grid';
 import { FilterState, SortOption, WeightConfig, Anime } from '@/app/types/anime';
 import { Radar } from 'lucide-react';
+import { EmptyState } from '@/app/components/empty-state';
 
 export default function Home() {
   // Load data
@@ -72,19 +73,7 @@ export default function Home() {
         {/* Main Content Grid */}
         <main>
           {displayedAnimes.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="bg-white p-6 rounded-full shadow-float mb-4">
-                   <Radar size={48} className="text-apricot-300" />
-                </div>
-                <h3 className="text-xl font-extrabold text-cream-900 mb-2">找不到動畫</h3>
-                <p className="text-cream-500 max-w-xs">試著調整篩選條件或搜尋其他關鍵字。</p>
-                <button 
-                  onClick={() => setFilters({ genres: [], searchQuery: '', minVotes: 0, yearOption: 'all' })}
-                  className="mt-6 px-6 py-2 bg-white text-apricot-500 font-bold rounded-full shadow-soft hover:shadow-md transition-all"
-                >
-                  清除篩選
-                </button>
-             </div>
+             <EmptyState onReset={() => setFilters({ genres: [], searchQuery: '', minVotes: 0, yearOption: 'all' })} />
           ) : (
              <AnimeGrid 
                animes={displayedAnimes} 
