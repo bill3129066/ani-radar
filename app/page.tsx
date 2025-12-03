@@ -1,32 +1,27 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { loadAnimeData, getAllGenres } from '@/app/lib/data-loader';
+import { useState, useMemo } from 'react';
+import { loadAnimeData } from '@/app/lib/data-loader';
 import { filterAnimes } from '@/app/lib/filters';
 import { sortAnimes, calculateCompositeScore } from '@/app/lib/sorting';
-import { FilterSidebar } from '@/app/components/filter-sidebar';
+import { FilterBar } from '@/app/components/filter-bar';
 import { AnimeGrid } from '@/app/components/anime-grid';
 import { FilterState, SortOption, WeightConfig, Anime } from '@/app/types/anime';
-import { SlidersHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Radar } from 'lucide-react';
 
 export default function Home() {
   // Load data
-  // In a real app with large data, we might want to load this differently or use SSG/ISR
-  // For this static JSON approach, simple load is fine.
   const allAnimes = useMemo(() => loadAnimeData(), []);
-  const allGenres = useMemo(() => getAllGenres(allAnimes), [allAnimes]);
 
   // State
   const [filters, setFilters] = useState<FilterState>({
     genres: [],
     searchQuery: '',
-    minVotes: 50, // Default minimum votes to filter out noise
+    minVotes: 0, // Default 0 (Off) per requirements
     yearOption: 'all',
   });
 
-  const [sortBy, setSortBy] = useState<SortOption>('bahamut');
+  const [sortBy, setSortBy] = useState<SortOption>('composite'); // Default sort by Radar Score
   
   const [weights, setWeights] = useState<WeightConfig>({
     bahamut: 25,
@@ -48,79 +43,60 @@ export default function Home() {
   const getCompositeScore = (anime: Anime) => calculateCompositeScore(anime, weights);
 
   return (
-    <div className="min-h-screen bg-[#F7F5F2] text-[#3A3A3A] font-sans selection:bg-[#FFE5EC] selection:text-[#3A3A3A]">
-      {/* Header / Top Bar */}
-      <header className="sticky top-0 z-50 w-full glass-panel border-b border-white/20 px-6 py-4 flex items-center justify-between md:hidden">
-        <h1 className="text-xl font-medium tracking-tight text-primary">Ani-Radar</h1>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <SlidersHorizontal className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] sm:w-[400px] overflow-y-auto bg-[#F7F5F2] p-0">
-             <div className="p-6">
-                <FilterSidebar
-                  filters={filters}
-                  sortBy={sortBy}
-                  weights={weights}
-                  genres={allGenres}
-                  onFiltersChange={setFilters}
-                  onSortChange={setSortBy}
-                  onWeightsChange={setWeights}
-                />
-             </div>
-          </SheetContent>
-        </Sheet>
-      </header>
-
-      <div className="container mx-auto px-4 py-8 md:py-12 md:flex md:gap-12">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
-          <div className="sticky top-12">
-            <h1 className="text-3xl font-light tracking-tight text-primary mb-8 pl-2">
-              Ani-Radar
-              <span className="text-accent-foreground text-sm ml-2 font-normal opacity-50">v1.0</span>
-            </h1>
-            <FilterSidebar
-              filters={filters}
-              sortBy={sortBy}
-              weights={weights}
-              genres={allGenres}
-              onFiltersChange={setFilters}
-              onSortChange={setSortBy}
-              onWeightsChange={setWeights}
-            />
-          </div>
+    <div className="min-h-screen bg-cream-200 text-cream-900 font-sans selection:bg-apricot-200 selection:text-apricot-900">
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* Branding Title */}
+        <div className="flex items-center gap-3 mb-6">
+           <div className="bg-apricot-500 p-2 rounded-xl text-white shadow-[0_4px_14px_rgba(255,159,89,0.4)]">
+              <Radar size={24} strokeWidth={2.5} />
+           </div>
+           <h1 className="text-3xl font-black text-cream-900 tracking-tight">
+             Ani-Radar
+           </h1>
+           <span className="text-sm font-bold text-cream-400 bg-white px-2 py-1 rounded-lg shadow-sm">
+              {displayedAnimes.length} Animes
+           </span>
         </div>
 
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 mt-4 md:mt-0">
-          <div className="mb-8 flex items-end justify-between px-2">
-            <div>
-              <h2 className="text-2xl font-light mb-1">
-                {filters.searchQuery 
-                  ? `搜尋 "${filters.searchQuery}"`
-                  : filters.yearOption && filters.yearOption !== 'all' 
-                    ? `${filters.yearOption} 動畫` 
-                    : '熱門動畫'}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                共找到 {displayedAnimes.length} 部作品
-              </p>
-            </div>
-          </div>
+        {/* Top Controls Area */}
+        <FilterBar 
+          filters={filters}
+          onFilterChange={setFilters}
+          sortOption={sortBy}
+          onSortChange={setSortBy}
+          weights={weights}
+          onWeightsChange={setWeights}
+        />
 
-          <AnimeGrid 
-            animes={displayedAnimes} 
-            showCompositeScore={sortBy === 'composite'}
-            getCompositeScore={getCompositeScore}
-          />
+        {/* Main Content Grid */}
+        <main>
+          {displayedAnimes.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="bg-white p-6 rounded-full shadow-float mb-4">
+                   <Radar size={48} className="text-apricot-300" />
+                </div>
+                <h3 className="text-xl font-extrabold text-cream-900 mb-2">找不到動畫</h3>
+                <p className="text-cream-500 max-w-xs">試著調整篩選條件或搜尋其他關鍵字。</p>
+                <button 
+                  onClick={() => setFilters({ genres: [], searchQuery: '', minVotes: 0, yearOption: 'all' })}
+                  className="mt-6 px-6 py-2 bg-white text-apricot-500 font-bold rounded-full shadow-soft hover:shadow-md transition-all"
+                >
+                  清除篩選
+                </button>
+             </div>
+          ) : (
+             <AnimeGrid 
+               animes={displayedAnimes} 
+               showCompositeScore={sortBy === 'composite'}
+               getCompositeScore={getCompositeScore}
+             />
+          )}
           
-          {/* Footer / Credits */}
-          <footer className="mt-20 py-8 text-center text-xs text-muted-foreground/60">
+          {/* Footer */}
+          <footer className="mt-20 py-8 text-center text-xs text-cream-400 font-bold">
             <p>Data sources: Bahamut Anime Crazy, IMDb, Douban, MyAnimeList.</p>
-            <p className="mt-2">Designed with Japanese Creamy UI Esthetics.</p>
+            <p className="mt-2 opacity-50">Designed with Creamy UI.</p>
           </footer>
         </main>
       </div>
