@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { loadAnimeData } from '@/app/lib/data-loader';
+import { loadAnimeData, getAllGenres } from '@/app/lib/data-loader';
 import { filterAnimes } from '@/app/lib/filters';
 import { sortAnimes, calculateCompositeScore } from '@/app/lib/sorting';
 import { FilterBar } from '@/app/components/filter-bar';
@@ -15,6 +15,7 @@ const ITEMS_PER_PAGE = 20;
 export default function Home() {
   // Load data
   const allAnimes = useMemo(() => loadAnimeData(), []);
+  const allGenres = useMemo(() => getAllGenres(allAnimes), [allAnimes]);
 
   // State
   const [filters, setFilters] = useState<FilterState>({
@@ -111,6 +112,7 @@ export default function Home() {
           onSortChange={setSortBy}
           weights={weights}
           onWeightsChange={setWeights}
+          genres={allGenres}
         />
 
         {/* Main Content Grid */}

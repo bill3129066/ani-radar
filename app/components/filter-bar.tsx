@@ -6,7 +6,7 @@ import { CreamCard, CreamInput } from '@/components/ui/cream-components';
 import { CreamWeightConfig } from './cream-weight-config';
 import { Search, Sliders, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { GENRES } from '@/app/lib/constants';
+// import { GENRES } from '@/app/lib/constants'; // Removed to use dynamic prop
 
 const YEARS = ["2025", "2024", "2023", "2022", "2021", "2020", "2010-2019", "2000-2009", "1980-1999", "all"];
 
@@ -17,6 +17,7 @@ interface FilterBarProps {
   onSortChange: (option: SortOption) => void;
   weights: WeightConfig;
   onWeightsChange: (weights: WeightConfig) => void;
+  genres: string[];
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -25,7 +26,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   sortOption,
   onSortChange,
   weights,
-  onWeightsChange
+  onWeightsChange,
+  genres
 }) => {
   const [showWeights, setShowWeights] = useState(false);
 
@@ -170,7 +172,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
              <span className="text-xs font-bold text-cream-500 uppercase tracking-wider">類型篩選</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {GENRES.map(genre => {
+            {genres.map(genre => {
                const isSelected = filters.genres.includes(genre);
                return (
                 <button
