@@ -9,12 +9,11 @@ import { cn } from '@/lib/utils';
 
 interface AnimeCardProps {
   anime: Anime;
-  showCompositeScore?: boolean;
   compositeScore?: number;
   sortOption?: SortOption;
 }
 
-export function AnimeCard({ anime, showCompositeScore, compositeScore, sortOption }: AnimeCardProps) {
+export function AnimeCard({ anime, compositeScore, sortOption }: AnimeCardProps) {
   
   // Calculate display score based on sortOption
   let displayScore = 0;

@@ -122,7 +122,6 @@ export const CreamSlider = ({
   value, 
   onChange, 
   label, 
-  color = 'apricot',
   max = 100,
   className = '',
   disabled = false
@@ -130,7 +129,6 @@ export const CreamSlider = ({
   value: number, 
   onChange: (val: number) => void, 
   label?: string, 
-  color?: string,
   max?: number,
   className?: string,
   disabled?: boolean

@@ -22,7 +22,7 @@ export default function Home() {
     yearOption: 'all',
   });
 
-  const [sortBy, setSortBy] = useState<SortOption>('composite'); // Default sort by Radar Score
+  const [sortBy, setSortBy] = useState<SortOption>('bahamut'); // Default sort by Bahamut Score
   
   const [weights, setWeights] = useState<WeightConfig>({
     bahamut: 25,
@@ -77,7 +77,6 @@ export default function Home() {
           ) : (
              <AnimeGrid 
                animes={displayedAnimes} 
-               showCompositeScore={sortBy === 'composite'}
                getCompositeScore={getCompositeScore}
                sortOption={sortBy}
              />
