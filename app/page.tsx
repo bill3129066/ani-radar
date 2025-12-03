@@ -90,6 +90,7 @@ export default function Home() {
                animes={displayedAnimes} 
                showCompositeScore={sortBy === 'composite'}
                getCompositeScore={getCompositeScore}
+               sortOption={sortBy}
              />
           )}
           

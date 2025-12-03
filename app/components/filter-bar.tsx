@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { FilterState, SortOption, WeightConfig } from '@/app/types/anime';
-import { CreamInput } from '@/components/ui/cream-components';
+import { CreamCard, CreamInput } from '@/components/ui/cream-components';
 import { CreamWeightConfig } from './cream-weight-config';
-import { Search, Sliders } from 'lucide-react';
+import { Search, Sliders, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GENRES } from '@/app/lib/constants';
 
@@ -136,31 +136,40 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
 
-      {/* Second Row: Year Chips */}
-      <div className="flex flex-col gap-2">
-         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-            <span className="text-xs font-bold text-cream-400 uppercase tracking-wider shrink-0 mr-2">年份</span>
+      {/* Unified Filter Card (Years & Genres) */}
+      <CreamCard className="p-0 overflow-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-cream-100">
+        
+        {/* Year Section */}
+        <div className="p-4 md:p-5 md:w-1/3 bg-cream-50/50">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter size={14} className="text-apricot-500" />
+            <span className="text-xs font-bold text-cream-500 uppercase tracking-wider">播出年份</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
             {YEARS.map(year => (
               <button
                 key={year}
                 onClick={() => handleYearChange(year)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-all border",
+                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
                   (filters.yearOption === year || (!filters.yearOption && year === 'all'))
-                    ? "bg-cream-900 text-white border-cream-900 shadow-md"
+                    ? "bg-cream-900 text-white border-cream-900 shadow-sm"
                     : "bg-white text-cream-500 border-cream-200 hover:border-cream-400 hover:text-cream-900"
                 )}
               >
-                {year === 'all' ? '全部年份' : year}
+                {year === 'all' ? '全部' : year}
               </button>
             ))}
-         </div>
-      </div>
+          </div>
+        </div>
 
-      {/* Third Row: Genre Chips */}
-      <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-cream-400 uppercase tracking-wider shrink-0 mr-2">類型</span>
+        {/* Genre Section */}
+        <div className="p-4 md:p-5 md:w-2/3 bg-white">
+          <div className="flex items-center gap-2 mb-3">
+             <Filter size={14} className="text-blue-400" />
+             <span className="text-xs font-bold text-cream-500 uppercase tracking-wider">類型篩選</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
             {GENRES.map(genre => {
                const isSelected = filters.genres.includes(genre);
                return (
@@ -168,10 +177,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   key={genre}
                   onClick={() => handleGenreToggle(genre)}
                   className={cn(
-                    "px-3 py-1 rounded-xl text-xs font-bold transition-all border",
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
                     isSelected
                       ? "bg-apricot-100 text-apricot-600 border-apricot-200 shadow-sm"
-                      : "bg-cream-50 text-cream-400 border-transparent hover:bg-white hover:shadow-sm"
+                      : "bg-cream-50 text-cream-400 border-transparent hover:bg-white hover:border-cream-200"
                   )}
                 >
                   {genre}
@@ -179,7 +188,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                );
             })}
           </div>
-      </div>
+        </div>
+
+      </CreamCard>
     </div>
   );
 };
