@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { loadAnimeData } from '@/app/lib/data-loader';
 import { filterAnimes } from '@/app/lib/filters';
 import { sortAnimes, calculateCompositeScore } from '@/app/lib/sorting';
 import { FilterBar } from '@/app/components/filter-bar';
 import { AnimeGrid } from '@/app/components/anime-grid';
 import { FilterState, SortOption, WeightConfig, Anime } from '@/app/types/anime';
-import { Radar } from 'lucide-react';
+import { Radar, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/app/components/empty-state';
+
+const ITEMS_PER_PAGE = 20;
 
 export default function Home() {
   // Load data
@@ -22,7 +24,7 @@ export default function Home() {
     yearOption: 'all',
   });
 
-  const [sortBy, setSortBy] = useState<SortOption>('bahamut'); // Default sort by Bahamut Score
+  const [sortBy, setSortBy] = useState<SortOption>('bahamut');
   
   const [weights, setWeights] = useState<WeightConfig>({
     bahamut: 25,
@@ -31,14 +33,55 @@ export default function Home() {
     myanimelist: 25,
   });
 
-  // Derived State (Filtered & Sorted)
-  const displayedAnimes = useMemo(() => {
+  const [page, setPage] = useState(1);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Derived State (Filtered & Sorted - Full List)
+  const processedAnimes = useMemo(() => {
     // 1. Filter
     const filtered = filterAnimes(allAnimes, filters);
     
     // 2. Sort
     return sortAnimes(filtered, sortBy, weights);
   }, [allAnimes, filters, sortBy, weights]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+    // Optional: Scroll to top of grid or similar if needed, 
+    // but usually keeping scroll position is fine or user is already near top if they just filtered.
+    // window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  }, [processedAnimes]);
+
+  // Sliced List for Rendering
+  const visibleAnimes = useMemo(() => {
+    return processedAnimes.slice(0, page * ITEMS_PER_PAGE);
+  }, [processedAnimes, page]);
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          if (visibleAnimes.length < processedAnimes.length) {
+            setPage((prev) => prev + 1);
+          }
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [visibleAnimes, processedAnimes]);
+
 
   // Helper for AnimeGrid to show composite score
   const getCompositeScore = (anime: Anime) => calculateCompositeScore(anime, weights);
@@ -56,7 +99,7 @@ export default function Home() {
              Ani-Radar
            </h1>
            <span className="text-sm font-bold text-cream-400 bg-white px-2 py-1 rounded-lg shadow-sm">
-              {displayedAnimes.length} Animes
+              {processedAnimes.length} Animes
            </span>
         </div>
 
@@ -72,14 +115,23 @@ export default function Home() {
 
         {/* Main Content Grid */}
         <main>
-          {displayedAnimes.length === 0 ? (
+          {processedAnimes.length === 0 ? (
              <EmptyState onReset={() => setFilters({ genres: [], searchQuery: '', minVotes: 0, yearOption: 'all' })} />
           ) : (
-             <AnimeGrid 
-               animes={displayedAnimes} 
-               getCompositeScore={getCompositeScore}
-               sortOption={sortBy}
-             />
+             <>
+               <AnimeGrid 
+                 animes={visibleAnimes} 
+                 getCompositeScore={getCompositeScore}
+                 sortOption={sortBy}
+               />
+               
+               {/* Loading Indicator / Sentinel */}
+               {visibleAnimes.length < processedAnimes.length && (
+                 <div ref={observerTarget} className="flex justify-center py-8">
+                   <Loader2 className="animate-spin text-apricot-500" size={32} />
+                 </div>
+               )}
+             </>
           )}
           
           {/* Footer */}
