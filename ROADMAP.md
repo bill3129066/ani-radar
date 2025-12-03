@@ -265,188 +265,37 @@ def validate_bahamut_data(json_path: str):
 ### Tasks
 
 #### 3.1 Create Type Definitions
-
-**File**: `app/types/anime.ts`
-
-```typescript
-export interface AnimeRating {
-  score: number;
-  votes?: number;
-  members?: number;
-}
-
-export interface Anime {
-  id: string;
-  title: string;
-  titleOriginal?: string;
-  thumbnail: string;
-  year: number;
-  genres: string[];
-  episodes: number;
-  bahamutUrl: string;
-  popularity: number;
-  tags?: string[];
-  ratings: {
-    bahamut: AnimeRating;
-    imdb?: AnimeRating;
-    douban?: AnimeRating;
-    myanimelist?: AnimeRating;
-  };
-}
-
-export type SortOption =
-  | 'bahamut'
-  | 'imdb'
-  | 'douban'
-  | 'myanimelist'
-  | 'composite';
-
-export interface FilterState {
-  genres: string[];
-  yearStart?: number;
-  yearEnd?: number;
-  minVotes: number;
-  searchQuery: string;
-}
-
-export interface WeightConfig {
-  bahamut: number;
-  imdb: number;
-  douban: number;
-  myanimelist: number;
-}
-```
+**Status**: **COMPLETED**. Created `app/types/anime.ts`.
 
 #### 3.2 Create Data Loader
-
-**File**: `app/lib/data-loader.ts`
-
-```typescript
-import animeData from '@/data/animes.json';
-import { Anime } from '@/types/anime';
-
-export function loadAnimeData(): Anime[] {
-  return animeData as Anime[];
-}
-
-export function getAllGenres(animes: Anime[]): string[] {
-  const genreSet = new Set<string>();
-  animes.forEach(anime => {
-    anime.genres.forEach(genre => genreSet.add(genre));
-  });
-  return Array.from(genreSet).sort();
-}
-
-export function getYearRange(animes: Anime[]): [number, number] {
-  const years = animes.map(a => a.year);
-  return [Math.min(...years), Math.max(...years)];
-}
-```
+**Status**: **COMPLETED**. Created `app/lib/data-loader.ts`.
 
 #### 3.3 Create Utility Functions
-
-**File**: `app/lib/utils.ts`
-
-```typescript
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-export function normalizeRating(rating: number, scale: '1-5' | '0-10'): number {
-  if (scale === '1-5') {
-    return rating * 2; // Convert to 0-10
-  }
-  return rating;
-}
-
-export function formatNumber(num: number): string {
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
-  }
-  return num.toString();
-}
-```
+**Status**: **COMPLETED**. Created `app/lib/utils.ts`.
 
 #### 3.4 Create Basic Layout
-
-**File**: `app/layout.tsx`
-
-```typescript
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Ani-Radar - Anime Rating Dashboard",
-  description: "Discover the best anime with multi-platform ratings",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="zh-TW">
-      <body className={inter.className}>{children}</body>
-    </html>
-  );
-}
-```
+**Status**: **COMPLETED**. Updated `app/layout.tsx`.
 
 #### 3.5 Create Basic Home Page (Testing)
-
-**File**: `app/page.tsx`
-
-```typescript
-import { loadAnimeData } from '@/lib/data-loader';
-
-export default function Home() {
-  const animes = loadAnimeData();
-
-  return (
-    <main className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Ani-Radar</h1>
-      <p>Total anime: {animes.length}</p>
-
-      {/* Display first 10 anime as test */}
-      <div className="grid gap-4 mt-8">
-        {animes.slice(0, 10).map(anime => (
-          <div key={anime.id} className="border p-4 rounded">
-            <h2>{anime.title}</h2>
-            <p>Year: {anime.year}</p>
-            <p>Bahamut: {anime.ratings.bahamut.score}</p>
-          </div>
-        ))}
-      </div>
-    </main>
-  );
-}
-```
+**Status**: **COMPLETED**. Updated `app/page.tsx` to display sample data.
 
 #### 3.6 Configure Static Data Import
-
-Copy `data/animes.json` to `app/data/animes.json` or adjust import path.
+**Status**: **COMPLETED**. Verified import path `@/data/animes.json`.
 
 ### Deliverables
-- `app/types/anime.ts` - Type definitions
-- `app/lib/data-loader.ts` - Data loading functions
-- `app/lib/utils.ts` - Utility functions
-- `app/layout.tsx` - Root layout
-- `app/page.tsx` - Basic home page
-- Working Next.js app displaying anime data
+- [x] `app/types/anime.ts` - Type definitions
+- [x] `app/lib/data-loader.ts` - Data loading functions
+- [x] `app/lib/utils.ts` - Utility functions
+- [x] `app/layout.tsx` - Root layout
+- [x] `app/page.tsx` - Basic home page
+- [x] Working Next.js app displaying anime data
 
 ### Acceptance Criteria
-- [ ] Next.js dev server runs without errors
-- [ ] Anime data loads successfully
-- [ ] TypeScript types compile without errors
-- [ ] Basic page displays anime count and sample data
-- [ ] No console errors in browser
+- [x] Next.js dev server runs without errors
+- [x] Anime data loads successfully
+- [x] TypeScript types compile without errors
+- [x] Basic page displays anime count and sample data
+- [x] No console errors in browser
 
 ---
 
