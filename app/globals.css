@@ -1,26 +1,165 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Creamy UI Custom Colors */
+  --color-cream: #F7F5F2;
+  --color-warm-almond: #EAE6DF;
+  --color-sakura: #FFE5EC;
+  --color-peach: #FFD6BA;
+  --color-charcoal: #3A3A3A;
+  --color-deep-tea: #8B7E74;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Japanese Creamy Texture Variables */
+  
+  /* Base: Cream White #F7F5F2 */
+  --background: 36 20% 96%;
+  
+  /* Text: Charcoal #3A3A3A */
+  --foreground: 0 0% 23%;
+
+  /* Card: Translucent White with Blur */
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 23%;
+
+  /* Popover: Slightly warmer white */
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 23%;
+
+  /* Primary: Deep Tea #8B7E74 (For action buttons/text) or Sakura? 
+     Design says Primary Button uses Sakura gradient. 
+     Let's map --primary to Deep Tea for text contrast, and handle buttons specifically.
+     Or map Primary to Charcoal for high contrast.
+     Let's go with Charcoal for Primary Elements (Solid) and Sakura for decorative.
+  */
+  --primary: 0 0% 23%;
+  --primary-foreground: 36 20% 96%;
+
+  /* Secondary: Warm Almond #EAE6DF */
+  --secondary: 40 18% 90%;
+  --secondary-foreground: 0 0% 23%;
+
+  /* Muted: Linen #F0EBE3 */
+  --muted: 40 20% 92%;
+  --muted-foreground: 26 9% 50%; /* Deep Tea */
+
+  /* Accent: Sakura #FFE5EC (Hover states) */
+  --accent: 344 100% 95%;
+  --accent-foreground: 0 0% 23%;
+
+  /* Destructive */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Borders: Warm Almond or Transparent White */
+  --border: 40 18% 85%; /* Slightly darker than secondary for visibility */
+  --input: 40 18% 85%;
+  --ring: 344 100% 85%; /* Sakura ring */
+
+  --radius: 1rem; /* 16px default, can scale up */
+  
+  --font-sans: 'Noto Sans TC', 'Inter', sans-serif;
+}
+
+.dark {
+  /* Dark Mode - Muted Dark Brown/Grey (Coffee) */
+  --background: 30 10% 15%;
+  --foreground: 40 20% 90%;
+  
+  --card: 30 10% 20%;
+  --card-foreground: 40 20% 90%;
+  
+  --popover: 30 10% 20%;
+  --popover-foreground: 40 20% 90%;
+  
+  --primary: 40 20% 90%;
+  --primary-foreground: 30 10% 15%;
+  
+  --secondary: 30 10% 25%;
+  --secondary-foreground: 40 20% 90%;
+  
+  --muted: 30 10% 25%;
+  --muted-foreground: 40 10% 70%;
+  
+  --accent: 30 10% 30%;
+  --accent-foreground: 40 20% 90%;
+  
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 90%;
+  
+  --border: 30 10% 30%;
+  --input: 30 10% 30%;
+  --ring: 30 10% 60%;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom Glassmorphism Classes */
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm hover:shadow-md transition-all duration-500 ease-out;
+  }
+  
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-md border border-white/30;
+  }
+  
+  .neumorphic-button {
+    @apply shadow-[6px_6px_12px_rgba(0,0,0,0.06),-4px_-4px_10px_rgba(255,255,255,0.8)] hover:translate-y-[-2px] hover:shadow-[8px_8px_16px_rgba(0,0,0,0.08),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-300;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50;
+  }
 }

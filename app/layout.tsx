@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const notoSansTC = Noto_Sans_TC({ 
+  subsets: ["latin"], 
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-noto-sans-tc",
+  preload: false
+});
 
 export const metadata: Metadata = {
   title: "Ani-Radar - Anime Rating Dashboard",
@@ -16,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-TW">
-      <body className={inter.className}>{children}</body>
+      <body className={`${notoSansTC.className} ${inter.variable} antialiased`}>{children}</body>
     </html>
   );
 }

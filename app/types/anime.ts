@@ -33,8 +33,7 @@ export type SortOption =
 
 export interface FilterState {
   genres: string[];
-  yearStart?: number;
-  yearEnd?: number;
+  yearOption?: string; // "2024", "2010-2019", "all"
   minVotes: number;
   searchQuery: string;
 }
