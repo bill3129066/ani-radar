@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Guide for Ani-Radar
 
 **Last Updated**: 2025-12-02
-**Project Status**: Phase 0 (Initial Setup Complete)
+**Project Status**: Phase 1.5 (Data Remediation - ACG Database Integration)
 
 ---
 
@@ -162,21 +162,23 @@ ani-radar/
 
 ## Current Implementation Status
 
-### ✅ Completed (Phase 0)
+### ✅ Completed (Phase 1)
 
 - [x] Next.js project initialized
-- [x] TypeScript configured
-- [x] Tailwind CSS configured
 - [x] Basic file structure in place
 - [x] Documentation files created (README, PRD, ROADMAP, CLAUDE.md)
+- [x] **Bahamut Scraper**: Implemented and working (`crawler/bahamut_scraper.py`)
+- [x] **Raw Data**: Scraped 1700+ animes (`data/bahamut_raw.json`)
+- [x] **Validation**: Script implemented (`crawler/validate_data.py`)
 
-### 🚧 In Progress
+### ⚠️ Critical Issues (Phase 1.5)
 
-None currently
+- [ ] **Japanese Title Missing**: Coverage is 0.0%. This blocks Phase 2.
+- [ ] **Action Required**: Modify scraper to follow "Work Info" link to ACG Database page.
 
 ### 📋 Planned (See ROADMAP.md for details)
 
-- **Phase 1**: Data collection foundation (Bahamut scraper)
+- **Phase 1.5**: Data Remediation (ACG Database Integration)
 - **Phase 2**: Cross-platform rating alignment (MAL, IMDb, Douban)
 - **Phase 3**: Frontend foundation (types, data loader, basic layout)
 - **Phase 4**: Core UI components
@@ -1088,6 +1090,7 @@ Target modern browsers:
 
 ## Update History
 
+- **2025-12-02**: Phase 1.5 update: Critical data remediation required.
 - **2025-12-02**: Initial CLAUDE.md created (Phase 0 complete)
 
 ---
