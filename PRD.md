@@ -229,10 +229,10 @@
 
 ### 5.2 跨平台評分
 
-**來源**: 第三方 API
+**來源**: 第三方 API / 網頁爬取
 
 **必需字段**:
-- IMDb: score (0-10), votes
+- IMDb: score (0-10), votes (使用 Suggestion API 查找 ID + JSON-LD 抓取評分)
 - 豆瓣: score (0-10), votes  
 - MyAnimeList: score (0-10), members
 
@@ -262,9 +262,10 @@ Step 2: 用日文原名查 MyAnimeList
 ├─ MAL 頁面通常有 IMDb ID (在 External Links)
 └─ 拿到: MAL評分 + IMDb ID
 
-Step 3: 用 IMDb ID 查 IMDb
-├─ IMDb API 或第三方 API (api.wmdb.tv)
-└─ 拿到: IMDb評分
+Step 3: 獲取 IMDb 評分
+├─ 優先: 使用 MAL 提供的 IMDb ID
+├─ 備案: 若 MAL 無 ID，使用 IMDb Suggestion API 搜尋 (用日文原名或 MAL 英文名)
+└─ 拿到: IMDb評分 (解析頁面 JSON-LD)
 
 Step 4: 豆瓣匹配（最難）
 ├─ 方案A: 用中文標題 + 年份搜豆瓣 (準確率 ~60%)

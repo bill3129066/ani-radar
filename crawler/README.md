@@ -1,234 +1,126 @@
-# Ani-Radar Crawler
+# Ani-Radar Data Crawler
 
-Python scripts for scraping anime data from Bahamut Anime Crazy (動畫瘋) and other platforms.
+This directory contains the complete data collection pipeline for **Ani-Radar**. It is designed to aggregate anime data from Bahamut Anime Crazy and enrich it with ratings from global platforms (MyAnimeList, IMDb, Douban).
 
-## Setup
-
-### 1. Create Virtual Environment
-
-```bash
-cd crawler
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 2. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-## Phase 1: Bahamut Scraper
-
-### Important Notes
-
-⚠️ **Before running the scraper**, you need to verify and adjust the CSS selectors and HTML structure patterns to match the actual Bahamut Anime Crazy website.
-
-The scraper uses generic patterns that may need adjustment:
-- Chinese title selectors
-- Japanese original title extraction (CRITICAL for cross-platform matching)
-- Genre, year, episode count patterns
-- Rating and vote count selectors
-- Thumbnail image URLs
-
-### Testing the Scraper
-
-**Always test with a small dataset first:**
-
-```bash
-python test_scraper.py
-```
-
-This will:
-1. Scrape only 10 anime
-2. Validate all required fields are extracted
-3. Check Japanese title coverage
-4. Display detailed output for each anime
-5. Save results to `../data/bahamut_test.json`
-
-**Review the output carefully** to ensure:
-- ✓ Chinese title is correct
-- ✓ Japanese original title is extracted (CRITICAL!)
-- ✓ Year, genres, episodes are accurate
-- ✓ Bahamut rating (1-5 scale) and vote count are correct
-- ✓ Thumbnail URL is valid
-
-### Adjusting the Scraper
-
-If the test scraper fails to extract data correctly, you need to:
-
-1. **Inspect the Bahamut website** using browser DevTools
-2. **Find the correct CSS selectors** for each field
-3. **Update `bahamut_scraper.py`** in the `scrape_anime_detail()` function
-
-Example adjustments:
-
-```python
-# Original (generic)
-title_elem = soup.find('h1', class_='anime_name')
-
-# Adjusted (after inspecting actual website)
-title_elem = soup.find('div', class_='actual-title-class')
-```
-
-**Critical fields to verify:**
-- `titleOriginal` - Japanese title (essential for Phase 2 cross-platform matching)
-- `ratings.bahamut.score` - Must be 1-5 scale
-- `ratings.bahamut.votes` - Number of ratings
-- `year` - Release year as integer
-- `genres` - Array of genre strings
-
-### Running Full Scrape
-
-Once the test scraper works correctly:
-
-```bash
-python bahamut_scraper.py
-```
-
-**Expected behavior:**
-- Scrapes all anime from Bahamut Anime Crazy (~1500-1800 entries)
-- Saves progress every 100 anime to avoid data loss
-- Rate limiting: 2-4 seconds between requests
-- Output: `../data/bahamut_raw.json`
-- Estimated time: 1-2 hours
-
-**Monitor the output** for:
-- Success rate (should be >80%)
-- Japanese title coverage (should be >90%)
-- Any repeated errors that indicate selector issues
-
-### Validating Results
-
-After scraping is complete:
-
-```bash
-python validate_data.py
-```
-
-This checks:
-- ✓ Total anime count >= 1500
-- ✓ No missing required fields (title, rating, URL)
-- ✓ Japanese title coverage >= 90%
-- ✓ Rating values are valid (0-5 scale)
-- ✓ No duplicate IDs
-- ✓ Year data >= 95%
-- ✓ Genre data >= 90%
-
-**Acceptance criteria:**
-- Total anime: 1500+ entries
-- Japanese title: 90%+ coverage
-- All ratings valid and in correct scale
-- No data corruption or duplicates
-
-## Rate Limiting
-
-**ALWAYS respect rate limits to avoid getting blocked:**
-
-- Bahamut: 2-4 seconds between requests
-- User-Agent rotation (8 different agents)
-- Random delays to appear more human-like
-
-**If you get blocked:**
-1. Increase `MIN_DELAY` and `MAX_DELAY` in `bahamut_scraper.py`
-2. Add more User-Agent strings
-3. Wait 30 minutes before retrying
-4. Consider using proxies (last resort)
-
-## Error Handling
-
-The scraper is designed to **never crash**:
-- Failed requests are logged and skipped
-- Progress is saved every 100 anime
-- Partial data is acceptable (not all fields required)
-- Continues on error, provides summary at end
-
-## Output Files
+## 📂 Directory Structure
 
 ```
-data/
-├── bahamut_test.json       # Test run output (10 anime)
-├── bahamut_raw.json        # Full scrape output (~1800 anime)
-└── [future files for Phase 2]
+crawler/
+├── bahamut_scraper.py    # Phase 1: Scrapes basic data from Bahamut
+├── cross_platform.py     # Phase 2: Fetches ratings from MAL, IMDb, Douban
+├── generate_json.py      # Phase 3: Validates and generates final frontend JSON
+├── validate_data.py      # Utility: Checks data health (coverage, missing fields)
+├── test_scraper.py       # Utility: Quick 10-item test to verify selectors
+├── manual_mapping.json   # Config: Manual overrides for failed matches
+├── requirements.txt      # Python dependencies
+└── README.md             # This guide
 ```
 
-## Troubleshooting
+## 🚀 Getting Started
 
-### No anime URLs found
+### Prerequisites
+- Python 3.8+
+- `pip`
 
-**Problem:** `parse_anime_links()` returns empty list
+### Installation
 
-**Solution:**
-1. Check if the anime list URL is correct
-2. Inspect the HTML structure of the list page
-3. Update the regex pattern in `parse_anime_links()`:
-   ```python
-   anime_links = soup.find_all('a', href=re.compile(r'/animeRef\.php\?sn=\d+'))
+1. **Setup Virtual Environment** (Recommended)
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   # venv\Scripts\activate   # Windows
    ```
 
-### Missing Japanese titles
-
-**Problem:** `titleOriginal` field is empty for most anime
-
-**Solution:**
-1. Inspect an anime detail page on Bahamut
-2. Find where the Japanese title is displayed (look for "原文", "日文", or similar)
-3. Update the extraction logic in `scrape_anime_detail()`:
-   ```python
-   # Example: If Japanese title is in a specific div
-   original_title_elem = soup.find('div', class_='actual-japanese-title-class')
-   if original_title_elem:
-       anime['titleOriginal'] = original_title_elem.get_text(strip=True)
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
    ```
 
-### Incorrect ratings
+---
 
-**Problem:** Ratings are not in 0-5 scale or seem wrong
+## 🛠️ Data Pipeline Workflow
 
-**Solution:**
-1. Check if Bahamut uses a different scale (e.g., 0-10)
-2. Update the extraction and normalization logic
-3. Verify vote count is extracted from the correct element
+The data collection process consists of three sequential steps.
 
-### Getting blocked / 403 errors
+### Step 1: Foundation (Bahamut Scraper)
+Scrapes the catalog and details from Bahamut Anime Crazy.
 
-**Problem:** Requests fail with 403 or rate limiting errors
+- **Command**: `python bahamut_scraper.py`
+- **Output**: `../data/bahamut_raw.json`
+- **Duration**: ~1-2 hours (due to rate limiting)
+- **Key Features**:
+  - Fetches list pages to get all IDs.
+  - Scrapes individual detail pages.
+  - **Crucial**: Navigates to the linked "Work Info" (ACG Database) page to extract the **Japanese Original Title**, which is essential for cross-platform matching.
 
-**Solution:**
-1. Increase delay: `MIN_DELAY = 5.0`, `MAX_DELAY = 8.0`
-2. Add more User-Agent strings
-3. Wait 30-60 minutes before retrying
-4. Check if IP is temporarily banned
+### Step 2: Enrichment (Cross-Platform Orchestrator)
+Uses the Japanese title to find corresponding entries on other platforms.
 
-## Next Steps
+- **Command**: `python cross_platform.py`
+- **Input**: `../data/bahamut_raw.json`
+- **Output**: `../data/animes_enriched.json`
+- **Duration**: ~1-2 hours
+- **Logic**:
+  1. **MyAnimeList**: Search Jikan API (v4) using Japanese Title.
+  2. **IMDb**: 
+     - First, check if MAL provided an IMDb ID.
+     - If not, use IMDb Suggestion API to search by title.
+     - Scrape rating via JSON-LD on the IMDb page.
+  3. **Douban**: Search using Chinese title + Year (Best effort).
+- **Resumable**: The script saves progress every 10 items. You can stop and restart it safely.
 
-After completing Phase 1:
+### Step 3: Production Build (Generator)
+Finalizes the dataset for the Next.js frontend.
 
-1. ✓ Verify `data/bahamut_raw.json` exists and is valid
-2. ✓ Run `validate_data.py` and ensure all checks pass
-3. ✓ Check Japanese title coverage is >= 90%
-4. → Proceed to **Phase 2**: Cross-platform rating alignment (MAL, IMDb, Douban)
+- **Command**: `python generate_json.py`
+- **Input**: `../data/animes_enriched.json` + `manual_mapping.json`
+- **Output**: `../data/animes.json` (The actual file used by the App)
+- **Features**:
+  - Applies manual mappings.
+  - Validates required fields (title, year).
+  - Normalizes data structures.
 
-## Development Checklist
+---
 
-- [ ] Virtual environment created and activated
-- [ ] Dependencies installed
-- [ ] Test scraper runs successfully (10 anime)
-- [ ] Japanese title extraction verified (CRITICAL!)
-- [ ] Selectors adjusted to match actual website
-- [ ] Full scraper runs without crashes
-- [ ] Data validation passes all checks
-- [ ] Output file contains 1500+ anime entries
-- [ ] Japanese title coverage >= 90%
-- [ ] Ready for Phase 2
+## ⚙️ Configuration & Maintenance
 
-## Support
+### Rate Limiting
+To prevent IP bans, the scripts include hardcoded delays:
+- **Bahamut**: 1-3 seconds between requests.
+- **Jikan (MAL)**: ~1.5 seconds (API limit is strict).
+- **Douban**: 2+ seconds (Strict anti-scraping).
 
-If you encounter issues:
-1. Check this README first
-2. Review error messages carefully
-3. Inspect the actual website structure
-4. Adjust selectors in `bahamut_scraper.py`
-5. Test with `test_scraper.py` after changes
+### Manual Mapping (`manual_mapping.json`)
+If the automated matching fails (e.g., wrong IMDb link or missing rating), you can manually enforce IDs in this file.
 
-**Remember:** The scraper selectors are generic templates. You MUST verify them against the actual Bahamut Anime Crazy website before running the full scrape.
+**Format**:
+```json
+{
+  "bahamut_id_here": {
+    "imdb_id": "tt1234567",
+    "mal_id": 12345,
+    "douban_id": "123456"
+  }
+}
+```
+
+### Data Validation
+Run `python validate_data.py` to check the health of `bahamut_raw.json` or `animes.json` (modify script input path as needed). It reports:
+- Missing critical fields (Episodes, Popularity).
+- Coverage of Japanese titles.
+
+## 🐛 Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **429 Too Many Requests** | The script auto-sleeps. If persistent, stop and wait 1 hour. |
+| **IMDb/Douban not found** | Verify the title. Add entry to `manual_mapping.json`. |
+| **Selectors broken** | Bahamut may have changed their UI. Run `python test_scraper.py` to debug specific fields. |
+
+---
+
+## 📦 API Reference
+
+- **Jikan API (MAL)**: [https://jikan.moe/](https://jikan.moe/)
+- **IMDb**: Uses undocumented Suggestion API (`v2.sg.media-imdb.com`).
+- **Douban**: Uses internal suggestion API (`movie.douban.com/j/subject_suggest`).
