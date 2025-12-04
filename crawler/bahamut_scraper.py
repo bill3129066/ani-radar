@@ -176,11 +176,23 @@ def scrape_anime_detail(url: str) -> Optional[Dict]:
                 acg_response.raise_for_status()
                 acg_soup = BeautifulSoup(acg_response.text, 'lxml')
                 
-                # Extract Japanese Title (First h2)
-                # Structure: h1(Chinese) -> h2(Japanese) -> h2(English)
-                first_h2 = acg_soup.find('h2')
-                if first_h2:
-                    anime['titleOriginal'] = first_h2.get_text(strip=True)
+                # Extract Japanese and English Titles
+                # Structure typically:
+                # h1: Chinese Title
+                # h2: Japanese Title
+                # h2: English Title (Optional)
+                
+                h2s = acg_soup.find_all('h2')
+                if len(h2s) > 0:
+                    anime['titleOriginal'] = h2s[0].get_text(strip=True)
+                
+                if len(h2s) > 1:
+                    # Check if the second h2 is English-like (ASCII)
+                    # or just assume it's the secondary title
+                    second_title = h2s[1].get_text(strip=True)
+                    if second_title:
+                        anime['titleEnglish'] = second_title
+                        
             except Exception as e:
                 print(f"   ⚠️ Failed to fetch ACG page {acg_link}: {e}")
 
@@ -240,14 +252,42 @@ def main(limit: Optional[int] = None):
             scraped_animes.append(anime_data)
         rate_limit()
 
-    print(f"\n💾 Saving {len(scraped_animes)} scraped animes to {OUTPUT_FILE}...")
+    # Load existing data to merge
+    existing_data = []
+    if os.path.exists(OUTPUT_FILE):
+        try:
+            with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+            print(f"\n📂 Loaded {len(existing_data)} existing items for merging.")
+        except Exception as e:
+            print(f"⚠️ Failed to load existing file: {e}")
+
+    # Merge: Create a dict of existing items by ID
+    merged_map = {item['id']: item for item in existing_data}
+    
+    # Update/Insert scraped items
+    for item in scraped_animes:
+        merged_map[item['id']] = item
+        
+    final_data = list(merged_map.values())
+
+    print(f"\n💾 Saving {len(final_data)} animes (updated {len(scraped_animes)}) to {OUTPUT_FILE}...")
     Path(OUTPUT_FILE).parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        json.dump(scraped_animes, f, ensure_ascii=False, indent=4)
+        json.dump(final_data, f, ensure_ascii=False, indent=4)
         
     print("\n✅ Scraping complete!")
 
 if __name__ == '__main__':
     import sys
-    is_test = 'test' in sys.argv
-    main(limit=10 if is_test else None)
+    limit = None
+    if 'test' in sys.argv:
+        limit = 10
+    else:
+        # Check for numeric argument
+        for arg in sys.argv:
+            if arg.isdigit():
+                limit = int(arg)
+                break
+    
+    main(limit=limit)
