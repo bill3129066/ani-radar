@@ -198,16 +198,24 @@ def enrich_anime(anime: Dict) -> Dict:
                 }
     
     # --- 3. Douban ---
-    # Use Cleaned Chinese Title
-    if 'douban' not in anime['ratings'] and clean_cn:
-        logger.info(f"[{clean_cn}] Searching Douban...")
-        douban_data = search_douban(clean_cn, year)
-        if douban_data:
-            anime['ratings']['douban'] = {
-                'score': douban_data.get('douban_score'),
-                'votes': douban_data.get('douban_votes'),
-                'id': douban_data.get('douban_id')
-            }
+    # Use Multi-stage search (CN -> JP -> EN)
+    if 'douban' not in anime['ratings']:
+        douban_titles = {
+            'cn': clean_cn,
+            'jp': clean_jp,
+            'en': clean_en
+        }
+        
+        # Only search if we have at least one title
+        if any(douban_titles.values()):
+            logger.info(f"[{clean_cn}] Searching Douban...")
+            douban_data = search_douban(douban_titles, year)
+            if douban_data:
+                anime['ratings']['douban'] = {
+                    'score': douban_data.get('douban_score'),
+                    'votes': douban_data.get('douban_votes'),
+                    'id': douban_data.get('douban_id')
+                }
         
     return anime
 
