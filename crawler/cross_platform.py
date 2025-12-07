@@ -13,6 +13,7 @@ from mal_api import search_mal_by_japanese_title, get_mal_details
 from imdb_api import get_imdb_rating, search_imdb
 from douban_api import search_douban
 from services.aod_service import AnimeOfflineDatabase
+from services.anime_lists_service import AnimeListsService
 from lib.text_cleaner import clean_bahamut_title
 
 # Configure logging
@@ -29,15 +30,17 @@ logger = logging.getLogger(__name__)
 INPUT_FILE = '../data/bahamut_raw.json'
 OUTPUT_FILE = '../data/animes_enriched.json'
 AOD_FILE = '../data/anime-offline-database.jsonl'
+ANIME_LISTS_FILE = '../data/anime-lists.json'
 MANUAL_MAPPING_FILE = 'manual_mapping.json'
 
 # Global Services
 aod_service = None
+anime_lists_service = None
 manual_mapping = {}
 
 def load_services():
-    global aod_service, manual_mapping
-    
+    global aod_service, anime_lists_service, manual_mapping
+
     # Load Manual Mapping
     if os.path.exists(MANUAL_MAPPING_FILE):
         try:
@@ -48,10 +51,11 @@ def load_services():
             logger.error(f"Failed to load manual mappings: {e}")
             manual_mapping = {}
 
-    # Initialize AOD
+    # Initialize AOD (for MAL lookup)
     aod_service = AnimeOfflineDatabase(AOD_FILE)
-    # Lazy load will happen on first lookup, or we can force it here
-    # aod_service.load() 
+
+    # Initialize anime-lists (for MAL->IMDb lookup)
+    anime_lists_service = AnimeListsService(ANIME_LISTS_FILE) 
 
 def load_data(filepath: str) -> List[Dict]:
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -140,29 +144,45 @@ def enrich_anime(anime: Dict) -> Dict:
 
     # --- 2. IMDb ---
     imdb_id = None
-    
+    imdb_lookup_method = None
+
     # 2.1 Check Manual Mapping
     if anime_id in manual_mapping and 'imdb_id' in manual_mapping[anime_id]:
         imdb_id = manual_mapping[anime_id]['imdb_id']
-        
+        imdb_lookup_method = 'manual'
+        logger.info(f"[{clean_cn}] IMDb from manual mapping: {imdb_id}")
+
     # 2.2 Check Existing
     elif 'imdb' in anime['ratings'] and anime['ratings']['imdb'].get('id'):
         imdb_id = anime['ratings']['imdb']['id']
-        
-    # 2.3 Extract from MAL Data
-    elif mal_data and mal_data.get('imdb_id'):
+        imdb_lookup_method = 'existing'
+
+    # 2.3 anime-lists lookup (MAL ID -> IMDb ID) - NEW: Primary lookup method
+    if not imdb_id and mal_id and anime_lists_service:
+        imdb_id = anime_lists_service.lookup(mal_id)
+        if imdb_id:
+            imdb_lookup_method = 'anime-lists'
+            logger.info(f"[{clean_cn}] IMDb from anime-lists (MAL {mal_id}): {imdb_id}")
+
+    # 2.4 Extract from MAL Data (Jikan external links)
+    if not imdb_id and mal_data and mal_data.get('imdb_id'):
         imdb_id = mal_data.get('imdb_id')
-        
-    # 2.4 Search IMDb (Last Resort)
-    if not imdb_id:
-        # Try searching with English title first (better for IMDb)
-        query = clean_en if clean_en else clean_jp
-        # Or even Chinese? IMDb search supports Chinese sometimes but English is safer.
-        # Fallback to Jikan search result title if available?
-        
-        if query:
-             logger.info(f"[{clean_cn}] Searching IMDb fallback: {query}")
-             imdb_id = search_imdb(query)
+        imdb_lookup_method = 'mal-external'
+        logger.info(f"[{clean_cn}] IMDb from MAL external links: {imdb_id}")
+
+    # 2.5 Search IMDb with English title (better match rate)
+    if not imdb_id and clean_en:
+        logger.info(f"[{clean_cn}] Searching IMDb with English title: {clean_en}")
+        imdb_id = search_imdb(clean_en)
+        if imdb_id:
+            imdb_lookup_method = 'search-english'
+
+    # 2.6 Search IMDb with Japanese title (fallback)
+    if not imdb_id and clean_jp:
+        logger.info(f"[{clean_cn}] Searching IMDb with Japanese title: {clean_jp}")
+        imdb_id = search_imdb(clean_jp)
+        if imdb_id:
+            imdb_lookup_method = 'search-japanese'
 
     # Fetch IMDb Rating
     if imdb_id:
@@ -202,6 +222,8 @@ def main():
     load_services()
     if aod_service:
         aod_service.load()
+    if anime_lists_service:
+        anime_lists_service.load()
 
     animes = load_data(INPUT_FILE)
     logger.info(f"Loaded {len(animes)} animes.")
@@ -232,7 +254,16 @@ def main():
             current_record = enriched_map[anime_id]
         else:
             current_record = anime.copy()
-            
+
+        # --- CRITICAL: Always sync base fields from raw data ---
+        # These fields may have been added after initial enrichment
+        if anime.get('titleEnglish'):
+            current_record['titleEnglish'] = anime['titleEnglish']
+        if anime.get('titleOriginal'):
+            current_record['titleOriginal'] = anime['titleOriginal']
+        if anime.get('title'):
+            current_record['title'] = anime['title']
+
         # Optimization: Skip if fully enriched? 
         # (Has MAL + IMDb + Douban ratings)
         r = current_record.get('ratings', {})
