@@ -39,8 +39,6 @@ Given the Douban server returns a 429 (Too Many Requests)
 When making a request
 Then the system MUST log the error and wait/backoff or fail the specific item gracefully without crashing the entire script.
 
-## MODIFIED Requirements
-
 ### Requirement: Fallback Search Strategy
 The search logic MUST sequentially try multiple title variants until a match is found.
 
